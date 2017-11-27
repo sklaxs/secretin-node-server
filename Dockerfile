@@ -1,23 +1,21 @@
-FROM node:alpine
+FROM debian:buster-slim
 
-RUN apk add --no-cache --virtual .build-deps \
-        curl \
-        git
-
-# PID 1 needs to handle process reaping and signals
-# https://engineeringblog.yelp.com/2016/01/dumb-init-an-init-for-docker.html
-RUN curl -L https://github.com/Yelp/dumb-init/releases/download/v1.1.3/dumb-init_1.1.3_amd64 > /usr/local/bin/dumb-init && chmod +x /usr/local/bin/dumb-init
+RUN apt-get update
+RUN apt-get -y install curl gnupg
+RUN curl -sL https://deb.nodesource.com/setup_9.x | bash -
+RUN apt-get install -y nodejs
+RUN apt-get -y install -y git
+RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 
 RUN mkdir -p /secretin-server
 WORKDIR /secretin-server
 
 #COPY package.json /secretin-server
-RUN curl -L https://github.com/secretin/secretin-server/blob/master/package.json > ./package.json
-RUN ls
-RUN pwd
+RUN mkdir tmp
+RUN git clone https://github.com/secretin/secretin-server.git tmp/
+RUN mv tmp/package.json package.json
 RUN npm install
 
-#COPY . /secretin-server
 RUN git clone https://github.com/secretin/secretin-server.git
 
 EXPOSE 80
